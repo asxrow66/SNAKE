@@ -387,7 +387,7 @@ let CELL = 28;
 let snake    = [];
 let prevSnake= [];
 let dir      = { x:1, y:0 };
-let nextDir  = { x:1, y:0 };
+let dirQueue = [];   // buffered direction inputs
 let food     = { x:0, y:0 };
 let score    = 0;
 let highScore= parseInt(localStorage.getItem('serpent_hs') || '0', 10);
@@ -436,7 +436,7 @@ function initGame() {
   snake     = [{ x: mx, y: my }, { x: mx-1, y: my }, { x: mx-2, y: my }];
   prevSnake = snake.map(s => ({ ...s }));
   dir       = { x:1, y:0 };
-  nextDir   = { x:1, y:0 };
+  dirQueue  = [];
   score     = 0;
   particles = [];
   trails    = [];
@@ -473,7 +473,7 @@ function tick() {
   if (!running || paused || dying) return;
 
   prevSnake = snake.map(s => ({ ...s }));
-  dir = { ...nextDir };
+  if (dirQueue.length) dir = dirQueue.shift();
 
   const nx = snake[0].x + dir.x;
   const ny = snake[0].y + dir.y;
@@ -864,8 +864,11 @@ document.addEventListener('keydown', e => {
   const nd = DIRS[e.key];
   if (!nd) return;
   e.preventDefault();
-  // Prevent reversing
-  if (nd.x !== -dir.x || nd.y !== -dir.y) nextDir = nd;
+  // Compare against last queued dir (or current if queue empty) to prevent reversing
+  const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : dir;
+  if ((nd.x !== -last.x || nd.y !== -last.y) && (nd.x !== last.x || nd.y !== last.y)) {
+    if (dirQueue.length < 3) dirQueue.push(nd);
+  }
 });
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -890,7 +893,10 @@ canvas.addEventListener('touchend', e => {
   } else {
     nd = dy > 0 ? { x:0,y:1 } : { x:0,y:-1 };
   }
-  if (nd.x !== -dir.x || nd.y !== -dir.y) nextDir = nd;
+  const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : dir;
+  if ((nd.x !== -last.x || nd.y !== -last.y) && (nd.x !== last.x || nd.y !== last.y)) {
+    if (dirQueue.length < 3) dirQueue.push(nd);
+  }
 }, { passive: true });
 
 // ────────────────────────────────────────────────────────────────────────────
