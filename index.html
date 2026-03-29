@@ -404,8 +404,6 @@ let tickMs   = BASE_MS;
 let lastLevel= 1;
 
 // Eat flash (head pops)
-let eatFlash    = 0;    // countdown for head pop scale
-let eatFlashDir = -1;
 
 // ────────────────────────────────────────────────────────────────────────────
 // Init high score display
@@ -444,7 +442,6 @@ function initGame() {
   trails    = [];
   dying     = false;
   dyingT    = 0;
-  eatFlash  = 0;
   tickMs    = BASE_MS;
   lastLevel = 1;
   spawnFood();
@@ -509,9 +506,6 @@ function tick() {
 
     // Particle burst at food position (canvas coords)
     emitBurst((food.x + 0.5) * CELL, (food.y + 0.5) * CELL, 22);
-
-    // Eat flash animation
-    eatFlash = 1.0;
 
     spawnFood();
 
@@ -707,19 +701,13 @@ function drawSnake(t, now) {
       lit = 62 - prog * 18;   // brighter at head
     }
 
-    // Head eat-flash: brief scale pop
-    let scale = 1;
-    if (i === 0 && eatFlash > 0) {
-      scale = 1 + Math.sin(eatFlash * Math.PI) * 0.22;
-    }
-
     const glowStr = (1 - prog) * 22 + 5;
     const pad     = 1.2 + prog * 1.2;
     const corner  = Math.max(2, 4 - prog * 2);
-    const w       = (CELL - pad * 2) * (i === 0 ? scale : 1);
-    const h       = (CELL - pad * 2) * (i === 0 ? scale : 1);
-    const ox      = pad + (i === 0 ? (CELL - pad * 2 - w) / 2 : 0);
-    const oy      = pad + (i === 0 ? (CELL - pad * 2 - h) / 2 : 0);
+    const w       = CELL - pad * 2;
+    const h       = CELL - pad * 2;
+    const ox      = pad;
+    const oy      = pad;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -848,9 +836,6 @@ function loop(now) {
       return;
     }
   }
-
-  // Eat flash decay
-  if (eatFlash > 0) eatFlash = Math.max(0, eatFlash - 0.08);
 
   drawFood(now);
   drawSnake(te, now);
